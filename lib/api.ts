@@ -35,12 +35,19 @@ export const fetchNotes = async (
   tag?: string
 ): Promise<{ notes: Note[]; totalPages: number }> => {
   const params: { page: number; perPage: number; search?: string; tag?: string } = { page, perPage };
+  
   if (search.trim()) params.search = search.trim();
-  if (tag && tag !== "all") params.tag = tag;
 
-  const response = await axios.get<{ notes: Note[]; totalPages: number }>(`${BASE_URL}/notes`, { headers, params });
+  if (tag && tag.toLowerCase() !== "all") params.tag = tag;
+
+  const response = await axios.get<{ notes: Note[]; totalPages: number }>(
+    `${BASE_URL}/notes`,
+    { headers, params }
+  );
+  
   return response.data;
 };
+
 
 export const fetchNoteById = async (id: string): Promise<Note> => {
   if (!id) throw new Error('No note ID provided');
