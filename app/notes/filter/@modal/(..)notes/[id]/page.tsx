@@ -1,13 +1,10 @@
 import NotePreview from "@/components/NotePreview/NotePreview";
 
-type Props = {
-  params: { id: string };
-};
-
-export default function NotePage({ params }: Props) {
+export default async function NotePage({ params }: { params: { id: string } }) {
+  const { id } = params;
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <NotePreview id={params.id} />
+      <NotePreview id={id} />
     </div>
   );
 }
