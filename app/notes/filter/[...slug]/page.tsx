@@ -3,7 +3,8 @@ import { fetchNotes, fetchTags, CategoryType } from "@/lib/api";
 import SidebarNotes from "@/app/notes/filter/@sidebar/SidebarNotes";
 
 type Props = {
-  params: Promise<{ slug?: string[] }>;
+  params: { slug: string[] | undefined };
+  searchParams?: { [key: string]: string | string[] | undefined };
 };
 
 export default async function NotesPage({ params }: Props) {
