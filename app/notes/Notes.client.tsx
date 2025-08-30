@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
+import { useSearchParams, useRouter } from "next/navigation";
 import css from "./Notes.client.module.css";
 
 import NoteList from "@/components/NoteList/NoteList";
@@ -10,6 +11,7 @@ import Pagination from "@/components/Pagination/Pagination";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import Modal from "@/components/Modal/Modal";
 import NoteForm from "@/components/NoteForm/NoteForm";
+import NotePreview from "@/components/NotePreview/NotePreview";
 
 import { fetchNotes } from "@/lib/api";
 import type { Note } from "@/types/note";
@@ -22,9 +24,16 @@ interface NotesClientProps {
 const ITEMS_PER_PAGE = 12;
 
 export default function NotesClient({ initialData, tag }: NotesClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const noteIdFromQuery = searchParams?.get("note");
+
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(
+    noteIdFromQuery
+  );
 
   const debouncedSetSearch = useDebouncedCallback((value: string) => {
     setSearch(value);
@@ -54,6 +63,20 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
     setCurrentPage(1);
   }, [tag]);
 
+  useEffect(() => {
+    setSelectedNoteId(noteIdFromQuery);
+  }, [noteIdFromQuery]);
+
+  const openNoteModal = (id: string) => {
+    setSelectedNoteId(id);
+    router.push(`${window.location.pathname}?note=${id}`, { scroll: false });
+  };
+
+  const closeNoteModal = () => {
+    setSelectedNoteId(null);
+    router.push(window.location.pathname, { scroll: false });
+  };
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       <div className={css.navbar}>
@@ -65,7 +88,10 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
             pageCount={data.totalPages}
           />
         )}
-        <button className={css.button} onClick={() => setIsModalOpen(true)}>
+        <button
+          className={css.button}
+          onClick={() => setIsCreateModalOpen(true)}
+        >
           Create note +
         </button>
       </div>
@@ -74,15 +100,21 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
         {isLoading && <p>Loading...</p>}
         {isError && <p>Error loading notes.</p>}
         {data?.notes?.length ? (
-          <NoteList notes={data.notes} />
+          <NoteList notes={data.notes} onNoteClick={openNoteModal} />
         ) : (
           <p>No notes found.</p>
         )}
       </main>
 
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onCancel={() => setIsModalOpen(false)} />
+      {isCreateModalOpen && (
+        <Modal onClose={() => setIsCreateModalOpen(false)}>
+          <NoteForm onCancel={() => setIsCreateModalOpen(false)} />
+        </Modal>
+      )}
+
+      {selectedNoteId && (
+        <Modal onClose={closeNoteModal}>
+          <NotePreview id={selectedNoteId} />
         </Modal>
       )}
     </div>
