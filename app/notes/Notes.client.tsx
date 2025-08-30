@@ -44,17 +44,11 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
     debouncedSetSearch(value);
   };
 
+  const apiTag = tag?.toLowerCase() === "all" ? undefined : tag;
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["notes", tag, search, currentPage],
-    queryFn: ({ queryKey }) => {
-      const [, tag, search, currentPage] = queryKey;
-      return fetchNotes(
-        currentPage as number,
-        ITEMS_PER_PAGE,
-        search as string,
-        tag === "all" ? undefined : (tag as string)
-      );
-    },
+    queryKey: ["notes", apiTag, search, currentPage],
+    queryFn: () => fetchNotes(currentPage, ITEMS_PER_PAGE, search, apiTag),
     initialData,
     placeholderData: initialData,
   });
@@ -67,7 +61,7 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
     setSelectedNoteId(noteIdFromQuery);
   }, [noteIdFromQuery]);
 
-  const openNoteModal = (id: string) => {
+  const onNoteClick = (id: string) => {
     setSelectedNoteId(id);
     router.push(`${window.location.pathname}?note=${id}`, { scroll: false });
   };
@@ -100,7 +94,7 @@ export default function NotesClient({ initialData, tag }: NotesClientProps) {
         {isLoading && <p>Loading...</p>}
         {isError && <p>Error loading notes.</p>}
         {data?.notes?.length ? (
-          <NoteList notes={data.notes} onNoteClick={openNoteModal} />
+          <NoteList notes={data.notes} onNoteClick={onNoteClick} />
         ) : (
           <p>No notes found.</p>
         )}
